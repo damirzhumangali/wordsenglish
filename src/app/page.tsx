@@ -1,69 +1,110 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React from 'react';
+import { Flame, Award, BookOpen, Target, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { DailyGoalCard } from '@/components/dashboard/DailyGoalCard';
+import { WordOfTheDayCard } from '@/components/dashboard/WordOfTheDayCard';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { ActivityHeatmap } from '@/components/dashboard/ActivityHeatmap';
+import { getRankDetails } from '@/lib/storage';
+
+export default function DashboardPage() {
+  const { profile } = useApp();
+  const [greeting, setGreeting] = React.useState('Welcome back');
+
+  React.useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
+
+  const rank = getRankDetails(profile.totalXp);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+      {/* Top Welcome & Rank Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {greeting}, {profile.name} 👋
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Ready to convert passive recognition into active spoken fluency?
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* User Level Badge */}
+        <div className="flex items-center gap-3 p-2.5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center font-black text-sm shadow-md shadow-indigo-500/20">
+            {rank.level}
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+              <span>Level {rank.level}</span>
+              <span className="text-indigo-500 font-semibold">• {rank.rankTitle}</span>
+            </div>
+            <div className="w-28 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 mt-1.5 overflow-hidden">
+              <div
+                className="h-full bg-indigo-500 rounded-full"
+                style={{ width: `${rank.progressPercent}%` }}
+              />
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* Top 4 Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Day Streak"
+          value={`${profile.currentStreak} Days`}
+          subtext="Keep the fire burning"
+          icon={Flame}
+          color="amber"
+        />
+        <StatCard
+          label="Total XP"
+          value={profile.totalXp.toLocaleString()}
+          subtext={`${rank.rankTitle} Rank`}
+          icon={Award}
+          color="indigo"
+        />
+        <StatCard
+          label="Words Learned"
+          value={profile.wordsLearnedCount}
+          subtext={`${profile.wordsMasteredCount} Mastered`}
+          icon={BookOpen}
+          color="emerald"
+        />
+        <StatCard
+          label="Today's Goal"
+          value={`${profile.todayStudiedCount} / ${profile.settings.dailyGoalWords}`}
+          subtext={
+            profile.todayStudiedCount >= profile.settings.dailyGoalWords
+              ? 'Goal Achieved 🎉'
+              : `${profile.settings.dailyGoalWords - profile.todayStudiedCount} left`
+          }
+          icon={Target}
+          color="blue"
+        />
+      </div>
+
+      {/* Hero Daily Training Goal Card */}
+      <DailyGoalCard />
+
+      {/* Word of the Day & Quick Actions Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <WordOfTheDayCard />
+        </div>
+        <div className="lg:col-span-2 flex flex-col justify-between gap-6">
+          <QuickActions />
+          <ActivityHeatmap />
+        </div>
+      </div>
     </div>
   );
 }

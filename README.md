@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VocabFlow 🌊
 
-## Getting Started
+**VocabFlow** is a modern, gamified web application for mastering English vocabulary. Built to bridge the gap between **passive recognition** and **active recall**, VocabFlow trains users to spontaneously remember words, formulate sentences, and use them confidently in spoken conversation.
 
-First, run the development server:
+---
 
+## ✨ Key Features
+
+1. **Personalized Onboarding**:
+   - Calibrated English level assessment (A1 to C1).
+   - Targeted learning tracks (Daily English, IELTS, TOEFL, University, Work, IT & Programming, Travel, Business).
+   - Daily word targets (5 to 30 words/day) & study duration.
+   - Automated learning plan generation.
+
+2. **Spaced Repetition System (SRS)**:
+   - Scientifically scheduled retrieval intervals: `10m` → `1d` → `3d` → `7d` → `14d` → `30d` → `60d` → `MASTERED`.
+   - Adaptive priority decay calculation based on overdue scores, error frequency, and memory strength.
+   - Ease factor calibration and user self-ratings (`Again`, `Hard`, `Good`, `Easy`).
+
+3. **8 Interactive Quiz & Training Modes**:
+   - **Flashcard Stage**: Pre-quiz contextual exposure with IPA pronunciation, audio, definition, and example sentences.
+   - **English → Russian / Kazakh Quiz**: Rapid multiple-choice recognition with instant explanatory feedback.
+   - **Russian → English Quiz**: Inverted recall with weighted learning scores.
+   - **Fill the Gap**: Cloze sentences with choice chips or typed inputs.
+   - **Active Recall**: Pure Russian prompt requiring typed English with Levenshtein-distance typo tolerance and letter highlighting.
+   - **Word Match**: Fast-paced 5-pair connecting game with stopwatch timer and combo bonuses.
+   - **Sentence Builder**: Interactive scrambled word chips assembly.
+   - **Listening Quiz**: Real Web Speech API text-to-speech audio identification.
+   - **Speaking & AI Analysis**: Speech-to-text recognition with pronunciation and grammar feedback scoring.
+
+4. **Gamification & Habit Building**:
+   - **Streak System**: Daily streaks with contribution calendar heatmap.
+   - **Learner Rank Ladder**: Level 1 Beginner → Level 5 Explorer → Level 10 Learner → Level 20 Speaker → Level 30 Advanced → Level 50 Vocabulary Master.
+   - **Arcade Hub**: Speed Quiz (60s rapid sprint), Memory Cards (flip-to-match), and Vocabulary Battle (1v1 duel against AI with 3 hearts).
+   - **Badges & Achievements**: 8+ unlockable badges for milestones and streaks.
+
+5. **Curated & Custom Lexicon**:
+   - 110+ comprehensive seed words spanning A1 to C1 across 7 professional categories.
+   - Russian and Kazakh translation support.
+   - Custom word creation with automatic enrollment into the SRS cycle.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **UI & Styling**: React 19, Tailwind CSS v4, Lucide Icons, Framer Motion, Canvas Confetti
+- **Audio & Speech**: Browser Web Audio API synthesizer chimes & Web Speech API (TTS & STT)
+- **Database & Auth**: Supabase PostgreSQL with Row Level Security (RLS) + offline-first LocalStorage synchronization fallback
+
+---
+
+## 🚀 Getting Started Locally
+
+### 1. Install dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Run the development server
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. (Optional) Connect Supabase
+To connect a live Supabase project:
+1. Create a project at [supabase.com](https://supabase.com).
+2. Execute the queries inside [supabase_schema.sql](file:///Users/damirfile/Desktop/wordskil/supabase_schema.sql) in the Supabase SQL Editor.
+3. Add your environment variables in `.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-## Learn More
+*Note: VocabFlow works out of the box in Demo Mode without requiring any external keys.*
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ⌨️ Desktop Keyboard Shortcuts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `1` / `2` / `3` / `4`: Select quiz option
+- `Enter`: Submit answer / Proceed to next question
+- `Space`: Replay audio pronunciation
