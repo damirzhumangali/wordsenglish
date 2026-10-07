@@ -83,3 +83,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 - `1` / `2` / `3` / `4`: Select quiz option
 - `Enter`: Submit answer / Proceed to next question
 - `Space`: Replay audio pronunciation
+# wordsenglish
