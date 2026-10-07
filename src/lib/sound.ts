@@ -15,18 +15,28 @@ class SoundEngine {
     this.enabled = enabled;
   }
 
+  public isEnabled(): boolean {
+    return this.enabled;
+  }
+
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
+    try {
+      if (!this.ctx) {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
       }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+      return this.ctx;
+    } catch {
+      return null;
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-    return this.ctx;
   }
 
   playTap() {
@@ -40,16 +50,16 @@ class SoundEngine {
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.04);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
 
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.05);
+      osc.stop(ctx.currentTime + 0.06);
     } catch {
       // Audio playback silently ignored
     }
@@ -73,14 +83,14 @@ class SoundEngine {
         osc.frequency.setValueAtTime(freq, now + idx * 0.09);
 
         gain.gain.setValueAtTime(0, now + idx * 0.09);
-        gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.09 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.35);
+        gain.gain.linearRampToValueAtTime(0.24, now + idx * 0.09 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.38);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
 
         osc.start(now + idx * 0.09);
-        osc.stop(now + idx * 0.09 + 0.36);
+        osc.stop(now + idx * 0.09 + 0.4);
       });
     } catch {
       // Ignore
@@ -100,9 +110,9 @@ class SoundEngine {
 
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(280, now);
-      osc.frequency.exponentialRampToValueAtTime(180, now + 0.25);
+      osc.frequency.exponentialRampToValueAtTime(170, now + 0.25);
 
-      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.setValueAtTime(0.22, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
 
       osc.connect(gain);
@@ -133,7 +143,7 @@ class SoundEngine {
         osc.frequency.setValueAtTime(freq, now + idx * 0.08);
 
         gain.gain.setValueAtTime(0, now + idx * 0.08);
-        gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.08 + 0.02);
+        gain.gain.linearRampToValueAtTime(0.25, now + idx * 0.08 + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.5);
 
         osc.connect(gain);

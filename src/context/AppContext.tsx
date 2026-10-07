@@ -89,7 +89,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsClient(true);
     try {
       const savedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE);
-      if (savedProfile) setProfile(JSON.parse(savedProfile));
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        parsed.settings = {
+          ...getDefaultProfile().settings,
+          ...parsed.settings,
+        };
+        setProfile(parsed);
+      }
 
       const savedUserWords = localStorage.getItem(STORAGE_KEYS.USER_WORDS);
       if (savedUserWords) setUserWords(JSON.parse(savedUserWords));

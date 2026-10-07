@@ -174,6 +174,8 @@ export function getDefaultProfile(): UserProfile {
       animationsEnabled: true,
       darkMode: false,
       keyboardShortcuts: true,
+      notificationsEnabled: true,
+      reminderTimes: ['13:00', '20:00'],
     },
     joinedDate: '2026-09-01',
     isDemoUser: true,

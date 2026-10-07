@@ -9,6 +9,7 @@ import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { DailySessionModal } from '@/components/learning/DailySessionModal';
+import { NotificationManager } from '@/components/notifications/NotificationManager';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -35,6 +36,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <AuthModal />
         <SettingsModal />
         <DailySessionModal />
+        <NotificationManager />
       </div>
     </AppProvider>
   );

@@ -8,6 +8,8 @@ export interface UserSettings {
   animationsEnabled: boolean;
   darkMode: boolean;
   keyboardShortcuts: boolean;
+  notificationsEnabled: boolean;
+  reminderTimes: string[]; // ['13:00', '20:00']
 }
 
 export interface Achievement {

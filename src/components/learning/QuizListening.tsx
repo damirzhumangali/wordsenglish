@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, Check, X, ArrowRight, CornerDownLeft } from 'lucide-react';
+import { Volume2, Volume1, Check, X, ArrowRight, CornerDownLeft, Sparkles, RefreshCw } from 'lucide-react';
 import { QuizQuestion } from '@/types/session';
 import { speakWord } from '@/lib/speech';
 import { sound } from '@/lib/sound';
@@ -18,20 +18,26 @@ export function QuizListening({ question, onAnswer, onNext }: QuizListeningProps
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const targetWord = (question.audioText || question.word.word).toLowerCase().trim();
 
-  // Play audio on first mount
+  // Play audio on first mount safely
   useEffect(() => {
     const t = setTimeout(() => {
-      speakWord(targetWord);
-    }, 300);
+      handlePlayAudio(0.9);
+    }, 350);
     return () => clearTimeout(t);
   }, [targetWord]);
 
-  const handlePlayAudio = () => {
+  const handlePlayAudio = async (rate = 0.9) => {
     sound.playTap();
-    speakWord(targetWord);
+    setIsPlaying(true);
+    try {
+      await speakWord(targetWord, 'en-US', rate);
+    } finally {
+      setIsPlaying(false);
+    }
   };
 
   const handleOptionClick = (optionLabel: string, correct: boolean) => {
@@ -69,21 +75,46 @@ export function QuizListening({ question, onAnswer, onNext }: QuizListeningProps
   return (
     <div className="w-full max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl relative">
       <div className="text-center mb-6">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          Listening Challenge
-        </span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Listening Challenge</span>
+        </div>
 
-        {/* Audio Button */}
-        <div className="mt-6 mb-4 flex justify-center">
+        {/* Audio Buttons */}
+        <div className="mt-4 mb-3 flex flex-col items-center justify-center gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={handlePlayAudio}
+            animate={
+              isPlaying
+                ? {
+                    scale: [1, 1.06, 1],
+                    boxShadow: [
+                      '0 10px 25px -5px rgba(16, 185, 129, 0.3)',
+                      '0 15px 30px -5px rgba(16, 185, 129, 0.6)',
+                      '0 10px 25px -5px rgba(16, 185, 129, 0.3)',
+                    ],
+                    transition: { repeat: Infinity, duration: 1 },
+                  }
+                : {}
+            }
+            onClick={() => handlePlayAudio(0.9)}
             className="w-24 h-24 rounded-3xl bg-emerald-500 hover:bg-emerald-600 text-white flex flex-col items-center justify-center gap-1.5 shadow-xl shadow-emerald-500/25 cursor-pointer transition-colors"
           >
             <Volume2 className="w-10 h-10" />
-            <span className="text-[11px] font-bold uppercase tracking-wider">Play</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">
+              {isPlaying ? 'Playing...' : 'Play'}
+            </span>
           </motion.button>
+
+          {/* Slow speed replay option */}
+          <button
+            onClick={() => handlePlayAudio(0.7)}
+            className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <Volume1 className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Play Slower (0.7x)</span>
+          </button>
         </div>
 
         <p className="text-xs text-slate-500 dark:text-slate-400">
