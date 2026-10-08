@@ -26,6 +26,7 @@ export interface QuizQuestion {
   secondaryPrompt?: string;
   options?: MultipleChoiceOption[];
   correctAnswer: string;
+  direction?: 'en_ru' | 'ru_en';
   exampleSentence?: string;
   explanation?: string;
   audioText?: string;

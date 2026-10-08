@@ -44,12 +44,25 @@ export function QuizMultipleChoice({
 
   return (
     <div className="w-full max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl relative">
-      {/* Title / Question context */}
+      {/* Title / Direction context */}
       <div className="text-center mb-6">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          {question.title}
-        </span>
-        <div className="mt-3 flex items-center justify-center gap-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border shadow-xs">
+          {question.type === 'en_ru' ? (
+            <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+              <span>🇬🇧 Английский</span>
+              <span>➔</span>
+              <span>🇷🇺 Русский перевод</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+              <span>🇷🇺 Русский перевод</span>
+              <span>➔</span>
+              <span>🇬🇧 Вспомни английское слово</span>
+            </span>
+          )}
+        </div>
+
+        <div className="mt-2 flex items-center justify-center gap-3">
           <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             {question.prompt}
           </h2>
@@ -155,6 +168,19 @@ export function QuizMultipleChoice({
               <p className="text-xs text-slate-500 italic mt-1">
                 &ldquo;{question.exampleSentence}&rdquo;
               </p>
+            )}
+
+            {question.type === 'ru_en' && (
+              <div className="mt-3 pt-2.5 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePlayAudio}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 text-xs font-bold flex items-center gap-1.5 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer shadow-xs transition-colors"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Послушать: {question.word.word} [{question.word.pronunciation}]</span>
+                </button>
+              </div>
             )}
           </motion.div>
         )}

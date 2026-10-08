@@ -1,9 +1,12 @@
 import { EnglishLevel } from './vocabulary';
 
+export type StudyDirection = 'both' | 'en_ru' | 'ru_en';
+
 export interface UserSettings {
   dailyGoalWords: number; // 5, 10, 15, 20, 30
   studyTimeMinutes: number; // 5, 10, 15, 20, 30
   targetLang: 'ru' | 'kz' | 'en';
+  studyDirection: StudyDirection; // 'both' | 'en_ru' | 'ru_en'
   soundEnabled: boolean;
   animationsEnabled: boolean;
   darkMode: boolean;

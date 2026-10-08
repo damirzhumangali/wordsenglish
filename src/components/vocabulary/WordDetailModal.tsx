@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Volume2, Star, RotateCcw, Play, CheckCircle2 } from 'lucide-react';
+import { X, Volume2, Star, RotateCcw, Play, CheckCircle2, ArrowLeftRight } from 'lucide-react';
 import { Word } from '@/types/vocabulary';
 import { useApp } from '@/context/AppContext';
 import { formatNextReviewTime } from '@/lib/srs';
@@ -31,10 +31,10 @@ export function WordDetailModal({ word, onClose }: WordDetailModalProps) {
     speakWord(word.word);
   };
 
-  const handlePracticeWord = () => {
+  const handlePracticeWord = (dir: 'both' | 'ru_en' | 'en_ru' = 'both') => {
     sound.playTap();
     onClose();
-    startSession({ mode: 'daily' });
+    startSession({ mode: 'daily', direction: dir });
   };
 
   const handleResetProgress = () => {
@@ -190,20 +190,31 @@ export function WordDetailModal({ word, onClose }: WordDetailModalProps) {
         {/* Actions */}
         <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
           <button
-            onClick={handlePracticeWord}
-            className="w-full sm:flex-1 py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+            onClick={() => handlePracticeWord('both')}
+            className="w-full sm:flex-1 py-3 px-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+            title="Тренировка в обоих направлениях (EN ⇄ RU)"
           >
             <Play className="w-4 h-4 fill-white" />
-            <span>Practice Word</span>
+            <span>Учить (EN ⇄ RU)</span>
+          </button>
+
+          <button
+            onClick={() => handlePracticeWord('ru_en')}
+            className="w-full sm:flex-1 py-3 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+            title="Тренировка вспоминания английского слова по русскому переводу"
+          >
+            <ArrowLeftRight className="w-4 h-4" />
+            <span>Вспомнить (RU ➔ EN)</span>
           </button>
 
           {uw && (
             <button
               onClick={handleResetProgress}
-              className="w-full sm:w-auto py-3 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto py-3 px-3 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1 cursor-pointer"
+              title="Сбросить прогресс слова"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Progress</span>
+              <span>Сброс</span>
             </button>
           )}
         </div>

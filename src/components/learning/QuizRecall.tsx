@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowRight, CornerDownLeft, Sparkles, AlertCircle } from 'lucide-react';
+import { Check, ArrowRight, CornerDownLeft, Sparkles, AlertCircle, Volume2 } from 'lucide-react';
 import { QuizQuestion } from '@/types/session';
 import { levenshteinDistance } from '@/lib/question-generator';
 import { speakWord } from '@/lib/speech';
@@ -75,9 +75,9 @@ export function QuizRecall({ question, onAnswer, onNext }: QuizRecallProps) {
   return (
     <div className="w-full max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl relative">
       <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-3">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Active Recall Mode</span>
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider mb-3 shadow-xs">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+          <span>🇷🇺 RU ➔ 🇬🇧 EN • Вспомни английское слово</span>
         </div>
 
         <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -164,8 +164,22 @@ export function QuizRecall({ question, onAnswer, onNext }: QuizRecallProps) {
               </div>
             )}
 
+            <div className="mt-3 pt-2.5 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playTap();
+                  speakWord(question.word.word);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 text-xs font-bold flex items-center gap-1.5 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer shadow-xs transition-colors"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>Послушать: {question.word.word} [{question.word.pronunciation}]</span>
+              </button>
+            </div>
+
             {question.exampleSentence && (
-              <p className="text-xs text-slate-500 italic mt-3 pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
+              <p className="text-xs text-slate-500 italic mt-2">
                 &ldquo;{question.exampleSentence}&rdquo;
               </p>
             )}

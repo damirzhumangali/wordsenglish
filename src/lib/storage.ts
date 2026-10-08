@@ -170,6 +170,7 @@ export function getDefaultProfile(): UserProfile {
       dailyGoalWords: 15,
       studyTimeMinutes: 15,
       targetLang: 'ru',
+      studyDirection: 'both',
       soundEnabled: true,
       animationsEnabled: true,
       darkMode: false,

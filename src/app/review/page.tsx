@@ -15,10 +15,14 @@ export default function ReviewPage() {
     mistakeWords,
     startSession,
     toggleFavorite,
+    profile,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'due' | 'mistakes'>('due');
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'overdue' | 'today' | 'upcoming'>('all');
+  const [direction, setDirection] = useState<'both' | 'en_ru' | 'ru_en'>(
+    profile.settings.studyDirection || 'both'
+  );
   const [now, setNow] = useState<number>(1791379200000);
 
   React.useEffect(() => {
@@ -69,18 +73,45 @@ export default function ReviewPage() {
           </p>
         </div>
 
-        {dueForReviewWords.length > 0 && (
-          <button
-            onClick={() => {
-              sound.playTap();
-              startSession({ mode: 'review' });
-            }}
-            className="py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg shadow-amber-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            <span>Review {dueForReviewWords.length} Due Words</span>
-          </button>
-        )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Direction toggle pill */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            {[
+              { id: 'both', label: '🔀 Оба' },
+              { id: 'ru_en', label: '🇷🇺 ➔ 🇬🇧' },
+              { id: 'en_ru', label: '🇬🇧 ➔ 🇷🇺' },
+            ].map((d) => (
+              <button
+                key={d.id}
+                onClick={() => {
+                  sound.playTap();
+                  setDirection(d.id as any);
+                }}
+                className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  direction === d.id
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title={`Режим: ${d.label}`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+
+          {dueForReviewWords.length > 0 && (
+            <button
+              onClick={() => {
+                sound.playTap();
+                startSession({ mode: 'review', direction });
+              }}
+              className="py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span>Review {dueForReviewWords.length} Due Words</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Primary Tabs */}
@@ -235,7 +266,7 @@ export default function ReviewPage() {
               <button
                 onClick={() => {
                   sound.playTap();
-                  startSession({ mode: 'mistakes' });
+                  startSession({ mode: 'mistakes', direction });
                 }}
                 className="py-2.5 px-5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 whitespace-nowrap cursor-pointer"
               >

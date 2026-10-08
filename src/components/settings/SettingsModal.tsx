@@ -21,6 +21,7 @@ import {
   Bell,
   BellRing,
   Clock,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { sound } from '@/lib/sound';
@@ -265,6 +266,75 @@ export function SettingsModal() {
                   {lang.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Study Direction */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Направление обучения
+              </label>
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                {(profile.settings.studyDirection || 'both') === 'both' && 'Оба направления'}
+                {profile.settings.studyDirection === 'ru_en' && 'Русский ➔ Английский'}
+                {profile.settings.studyDirection === 'en_ru' && 'Английский ➔ Русский'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                {
+                  code: 'both',
+                  label: '🔀 Оба (EN ⇄ RU)',
+                  desc: 'Учишь и вспоминаешь в обе стороны',
+                  badge: 'Рекомендуется',
+                },
+                {
+                  code: 'ru_en',
+                  label: '🇷🇺 ➔ 🇬🇧 RU ➔ EN',
+                  desc: 'Вспомни английское слово по переводу',
+                  badge: 'Активный recall',
+                },
+                {
+                  code: 'en_ru',
+                  label: '🇬🇧 ➔ 🇷🇺 EN ➔ RU',
+                  desc: 'Выбери перевод по английскому слову',
+                  badge: 'Пассивный',
+                },
+              ].map((dir) => {
+                const isSelected = (profile.settings.studyDirection || 'both') === dir.code;
+                return (
+                  <button
+                    key={dir.code}
+                    type="button"
+                    onClick={() => {
+                      sound.playTap();
+                      updateSettings({ studyDirection: dir.code as any });
+                    }}
+                    className={`p-3 rounded-2xl text-left border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-100 shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-xs font-bold leading-tight">{dir.label}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                        {dir.desc}
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-bold self-start ${
+                        isSelected
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {dir.badge}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

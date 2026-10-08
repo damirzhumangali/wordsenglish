@@ -34,37 +34,67 @@ export default function GamesPage() {
   const [speedScore, setSpeedScore] = useState(0);
   const [speedStreak, setSpeedStreak] = useState(0);
   const [speedWrong, setSpeedWrong] = useState(0);
+  const [speedDirection, setSpeedDirection] = useState<'both' | 'en_ru' | 'ru_en'>('both');
   const [speedActiveQuestion, setSpeedActiveQuestion] = useState<{
-    word: string;
+    prompt: string;
     correct: string;
     options: string[];
+    direction: 'en_ru' | 'ru_en';
   } | null>(null);
   const [speedFinished, setSpeedFinished] = useState(false);
 
-  const startSpeedQuiz = () => {
+  const startSpeedQuiz = (dir?: 'both' | 'en_ru' | 'ru_en') => {
     sound.playTap();
+    const chosenDir = dir || speedDirection;
+    if (dir) setSpeedDirection(dir);
     setSpeedSeconds(60);
     setSpeedScore(0);
     setSpeedStreak(0);
     setSpeedWrong(0);
     setSpeedFinished(false);
     setActiveGame('speed');
-    nextSpeedQuestion();
+    nextSpeedQuestion(chosenDir);
   };
 
-  const nextSpeedQuestion = () => {
+  const nextSpeedQuestion = (overrideDir?: 'both' | 'en_ru' | 'ru_en') => {
+    const dirSetting = overrideDir || speedDirection;
     const target = words[Math.floor(Math.random() * words.length)];
-    const otherTranslations = words
-      .filter((w) => w.id !== target.id)
-      .map((w) => w.translation_ru);
-    const distractors = shuffleArray(otherTranslations).slice(0, 3);
-    const opts = shuffleArray([target.translation_ru, ...distractors]);
+    const isRuEn =
+      dirSetting === 'ru_en' ? true : dirSetting === 'en_ru' ? false : Math.random() > 0.5;
 
-    setSpeedActiveQuestion({
-      word: target.word,
-      correct: target.translation_ru,
-      options: opts,
-    });
+    const targetLang = profile.settings.targetLang;
+    const translation =
+      targetLang === 'kz' && target.translation_kz
+        ? target.translation_kz
+        : target.translation_ru;
+
+    if (isRuEn) {
+      // Prompt is Translation, Options are English words
+      const otherWords = words.filter((w) => w.id !== target.id).map((w) => w.word);
+      const distractors = shuffleArray(otherWords).slice(0, 3);
+      const opts = shuffleArray([target.word, ...distractors]);
+      setSpeedActiveQuestion({
+        prompt: translation,
+        correct: target.word,
+        options: opts,
+        direction: 'ru_en',
+      });
+    } else {
+      // Prompt is English word, Options are Translations
+      const otherTranslations = words
+        .filter((w) => w.id !== target.id)
+        .map((w) =>
+          targetLang === 'kz' && w.translation_kz ? w.translation_kz : w.translation_ru
+        );
+      const distractors = shuffleArray(otherTranslations).slice(0, 3);
+      const opts = shuffleArray([translation, ...distractors]);
+      setSpeedActiveQuestion({
+        prompt: target.word,
+        correct: translation,
+        options: opts,
+        direction: 'en_ru',
+      });
+    }
   };
 
   useEffect(() => {
@@ -293,14 +323,38 @@ export default function GamesPage() {
                 <Timer className="w-4 h-4" />
                 <span>60 Seconds • +120 XP</span>
               </div>
+
+              {/* Mode Pills */}
+              <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+                {[
+                  { id: 'both', label: '🔀 Оба' },
+                  { id: 'ru_en', label: '🇷🇺 ➔ 🇬🇧' },
+                  { id: 'en_ru', label: '🇬🇧 ➔ 🇷🇺' },
+                ].map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => {
+                      sound.playTap();
+                      setSpeedDirection(d.id as any);
+                    }}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-bold border cursor-pointer transition-colors ${
+                      speedDirection === d.id
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
-                onClick={startSpeedQuiz}
+                onClick={() => startSpeedQuiz(speedDirection)}
                 className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <span>Play Speed Quiz</span>
+                <span>Play Speed Quiz ({speedDirection === 'both' ? 'Оба' : speedDirection === 'ru_en' ? 'RU ➔ EN' : 'EN ➔ RU'})</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -386,11 +440,27 @@ export default function GamesPage() {
           {!speedFinished && speedActiveQuestion ? (
             <div>
               <div className="text-center py-6 mb-6">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Translate Word
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border ${
+                    speedActiveQuestion.direction === 'ru_en'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                  }`}
+                >
+                  {speedActiveQuestion.direction === 'ru_en' ? (
+                    <>
+                      <span>🇷🇺 RU ➔ 🇬🇧 EN</span>
+                      <span>• Вспомни английское слово</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🇬🇧 EN ➔ 🇷🇺 RU</span>
+                      <span>• Выбери перевод</span>
+                    </>
+                  )}
                 </span>
                 <h2 className="text-4xl font-black text-slate-900 dark:text-white mt-1">
-                  {speedActiveQuestion.word}
+                  {speedActiveQuestion.prompt}
                 </h2>
               </div>
 
@@ -417,7 +487,7 @@ export default function GamesPage() {
               </div>
               <p className="text-xs font-bold text-emerald-500">+120 XP Added to Profile</p>
               <button
-                onClick={startSpeedQuiz}
+                onClick={() => startSpeedQuiz()}
                 className="mt-6 w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md cursor-pointer"
               >
                 Play Again

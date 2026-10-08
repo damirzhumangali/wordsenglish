@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { Word, UserWord, SRSRating, EnglishLevel } from '@/types/vocabulary';
-import { UserProfile, UserSettings, Achievement, ActivityDay } from '@/types/user';
+import { UserProfile, UserSettings, Achievement, ActivityDay, StudyDirection } from '@/types/user';
 import { QuizQuestion, LearningSessionSummary } from '@/types/session';
 import { SEED_WORDS } from '@/lib/seed-words';
 import {
@@ -28,12 +28,18 @@ interface AppContextType {
   activeSessionQuestions: QuizQuestion[] | null;
   activeSessionIndex: number;
   activeSessionSummary: LearningSessionSummary | null;
+  activeSessionDirection: StudyDirection;
   authModalOpen: boolean;
   settingsModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
   setSettingsModalOpen: (open: boolean) => void;
   setOnboardingCompleted: (val: boolean) => void;
-  startSession: (options?: { categoryId?: string; mode?: 'daily' | 'review' | 'mistakes' | 'category'; wordsCount?: number }) => void;
+  startSession: (options?: {
+    categoryId?: string;
+    mode?: 'daily' | 'review' | 'mistakes' | 'category';
+    wordsCount?: number;
+    direction?: StudyDirection;
+  }) => void;
   submitAnswer: (userAnswer: string, isCorrect: boolean, rating?: SRSRating) => void;
   nextSessionQuestion: () => void;
   closeSession: () => void;
@@ -68,6 +74,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [activeSessionQuestions, setActiveSessionQuestions] = useState<QuizQuestion[] | null>(null);
   const [activeSessionIndex, setActiveSessionIndex] = useState<number>(0);
   const [activeSessionSummary, setActiveSessionSummary] = useState<LearningSessionSummary | null>(null);
+  const [activeSessionDirection, setActiveSessionDirection] = useState<StudyDirection>('both');
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
   const [sessionAnswersLog, setSessionAnswersLog] = useState<{
     questionId: string;
@@ -234,11 +241,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     categoryId?: string;
     mode?: 'daily' | 'review' | 'mistakes' | 'category';
     wordsCount?: number;
+    direction?: StudyDirection;
   }) => {
     let newWordPool: Word[] = [];
     let reviewWordPool: Word[] = [];
 
     const mode = options?.mode || 'daily';
+    const sessionDirection = options?.direction || profile.settings.studyDirection || 'both';
+    setActiveSessionDirection(sessionDirection);
+    const targetLang = profile.settings.targetLang || 'ru';
 
     if (mode === 'mistakes') {
       const mistakes = mistakeWords.map((m) => m.word);
@@ -265,7 +276,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const generated = generateDailySession(newWordPool, reviewWordPool, words);
+    const generated = generateDailySession(newWordPool, reviewWordPool, words, {
+      direction: sessionDirection,
+      targetLang,
+    });
     setActiveSessionQuestions(generated);
     setActiveSessionIndex(0);
     setActiveSessionSummary(null);
@@ -550,6 +564,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         activeSessionQuestions,
         activeSessionIndex,
         activeSessionSummary,
+        activeSessionDirection,
         authModalOpen,
         settingsModalOpen,
         setAuthModalOpen,

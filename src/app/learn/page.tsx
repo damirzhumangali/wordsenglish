@@ -7,8 +7,11 @@ import { CATEGORIES } from '@/lib/seed-words';
 import { sound } from '@/lib/sound';
 
 export default function LearnPage() {
-  const { startSession, userWords, words } = useApp();
+  const { startSession, userWords, words, profile } = useApp();
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
+  const [direction, setDirection] = useState<'both' | 'en_ru' | 'ru_en'>(
+    profile.settings.studyDirection || 'both'
+  );
 
   const levels = ['All', 'A1', 'A2', 'B1', 'B2', 'C1'];
 
@@ -32,7 +35,7 @@ export default function LearnPage() {
 
   const handleStartCategory = (catId: string) => {
     sound.playTap();
-    startSession({ mode: 'category', categoryId: catId });
+    startSession({ mode: 'category', categoryId: catId, direction });
   };
 
   return (
@@ -48,16 +51,43 @@ export default function LearnPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            sound.playTap();
-            startSession({ mode: 'daily' });
-          }}
-          className="py-3 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
-        >
-          <Play className="w-4 h-4 fill-white" />
-          <span>Start Daily Session</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Direction toggle pill */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            {[
+              { id: 'both', label: '🔀 Оба' },
+              { id: 'ru_en', label: '🇷🇺 ➔ 🇬🇧' },
+              { id: 'en_ru', label: '🇬🇧 ➔ 🇷🇺' },
+            ].map((d) => (
+              <button
+                key={d.id}
+                onClick={() => {
+                  sound.playTap();
+                  setDirection(d.id as any);
+                }}
+                className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  direction === d.id
+                    ? 'bg-emerald-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title={`Режим: ${d.label}`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => {
+              sound.playTap();
+              startSession({ mode: 'daily', direction });
+            }}
+            className="py-3 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+          >
+            <Play className="w-4 h-4 fill-white" />
+            <span>Start Daily Session</span>
+          </button>
+        </div>
       </div>
 
       {/* Level Filters */}

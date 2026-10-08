@@ -26,6 +26,7 @@ export function DailySessionModal() {
     closeSession,
     profile,
     startSession,
+    activeSessionDirection,
   } = useApp();
 
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -115,6 +116,13 @@ export function DailySessionModal() {
           </span>
         </div>
 
+        {/* Direction mode badge */}
+        <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
+          {activeSessionDirection === 'both' && '🔀 EN ⇄ RU (Оба)'}
+          {activeSessionDirection === 'ru_en' && '🇷🇺 RU ➔ 🇬🇧 EN'}
+          {activeSessionDirection === 'en_ru' && '🇬🇧 EN ➔ 🇷🇺 RU'}
+        </div>
+
         {/* Shortcuts reminder badge */}
         <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-slate-400 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
           <span>Space: 🔊</span>
@@ -136,6 +144,7 @@ export function DailySessionModal() {
             {currentQuestion.type === 'flashcard' && (
               <WordFlashcard
                 word={currentQuestion.word}
+                direction={currentQuestion.direction}
                 onNext={() => {
                   submitAnswer(currentQuestion.word.word, true);
                   nextSessionQuestion();
