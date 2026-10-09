@@ -23,6 +23,7 @@ export function CustomPersonaModal({
   const [personality, setPersonality] = useState(currentPersona.personality);
   const [strictness, setStrictness] = useState(currentPersona.strictness);
   const [accent, setAccent] = useState(currentPersona.speechAccent);
+  const [voicePersona, setVoicePersona] = useState(currentPersona.voicePersona || 'sky');
   const [customPrompt, setCustomPrompt] = useState(currentPersona.customPrompt || '');
 
   if (!isOpen) return null;
@@ -35,6 +36,7 @@ export function CustomPersonaModal({
       personality,
       strictness,
       speechAccent: accent,
+      voicePersona,
       customPrompt: customPrompt.trim(),
     };
     onSave(updated);
@@ -175,6 +177,39 @@ export function CustomPersonaModal({
                   }`}
                 >
                   {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ChatGPT Voice Picker */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Живой тембр голоса (как в ChatGPT)
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { id: 'sky', name: 'Sky', icon: '👩', desc: 'Теплый, живой' },
+                { id: 'alloy', name: 'Alloy', icon: '👨', desc: 'Чистый, четкий' },
+                { id: 'nova', name: 'Nova', icon: '👩', desc: 'Энергичный' },
+                { id: 'echo', name: 'Echo', icon: '👨', desc: 'Глубокий мужской' },
+              ].map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => {
+                    sound.playTap();
+                    setVoicePersona(v.id as any);
+                  }}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    voicePersona === v.id
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-900 dark:text-indigo-100 shadow-xs font-bold ring-1 ring-indigo-400'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <div className="text-base">{v.icon}</div>
+                  <div className="text-xs font-bold mt-0.5">{v.name}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{v.desc}</div>
                 </button>
               ))}
             </div>

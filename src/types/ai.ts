@@ -36,6 +36,8 @@ export interface SpeechFeedback {
   estimatedLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1';
 }
 
+export type VoicePersonaId = 'sky' | 'alloy' | 'nova' | 'echo';
+
 export interface CustomAIPersona {
   id: string;
   name: string;
@@ -45,6 +47,8 @@ export interface CustomAIPersona {
   feedbackFocus: ('grammar' | 'vocabulary' | 'pronunciation' | 'idioms')[];
   customPrompt?: string;
   speechAccent: 'en-US' | 'en-GB';
+  voicePersona?: VoicePersonaId;
+  speakFeedbackAloud?: boolean;
 }
 
 export interface AIMessage {

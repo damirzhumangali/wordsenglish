@@ -216,7 +216,7 @@ export default function AITutorPage() {
       // Auto-speak response if enabled
       if (autoSpeak) {
         setTimeout(() => {
-          speakWord(reply, currentPersona?.speechAccent || 'en-US');
+          speakWord(reply, currentPersona?.speechAccent || 'en-US', undefined, currentPersona?.voicePersona || 'sky');
         }, 200);
       }
     } catch {
@@ -234,7 +234,7 @@ export default function AITutorPage() {
 
   const handleSpeakText = (text: string) => {
     sound.playTap();
-    speakWord(text, currentPersona?.speechAccent || 'en-US');
+    speakWord(text, currentPersona?.speechAccent || 'en-US', undefined, currentPersona?.voicePersona || 'sky');
   };
 
   const startVoiceInput = () => {
@@ -351,11 +351,11 @@ export default function AITutorPage() {
               sound.playTap();
               setIsLiveModeOpen(true);
             }}
-            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/25 active:scale-[0.98] transition-all"
-            title="Открыть режим непрерывного голосового диалога Gemini Live"
+            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/25 active:scale-[0.98] transition-all ring-1 ring-emerald-400/40"
+            title="Открыть живой голосовой режим как в ChatGPT с мгновенным фидбэком"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Gemini Live Voice</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+            <span>🎙️ Живой голос как в GPT</span>
           </button>
 
           <button

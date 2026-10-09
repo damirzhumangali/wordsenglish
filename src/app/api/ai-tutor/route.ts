@@ -78,17 +78,26 @@ async function callGeminiWithFeedback(
   const tutorName = persona?.name || 'Luna';
   const strictness = persona?.strictness || 'balanced';
 
-  const systemPrompt = `You are ${tutorName}, an expert personal English speech coach and conversation partner in the VocabFlow app.
-Your personality: ${persona?.personality || 'friendly and supportive'}.
-Strictness level for feedback: ${strictness} (gentle = praise first, balanced = realistic helpful corrections, strict = rigorous exam standard).
-Custom guidelines: ${persona?.customPrompt || 'Teach vocabulary in context and give real-life examples.'}
-Current scenario: ${scenario}.
-${targetWord ? `Target word to teach/use: "${targetWord}".` : ''}
+  const systemPrompt = `You are ${tutorName}, an interactive English Voice AI just like ChatGPT Advanced Voice Mode.
+You have a warm, natural, human tone. You are speaking directly with the user through voice.
 
-CRITICAL: You must analyze what the user just said in English and provide REAL, ACTIONABLE FEEDBACK.
+LIVE VOICE FEEDBACK INSTRUCTIONS (CRITICAL FOR CHATGPT VOICE EXPERIENCE):
+In your "reply" field:
+1. Speak in a completely natural, human, conversational cadence (just like ChatGPT Voice).
+2. If the user made a grammar, tense, or preposition mistake: gently give verbal feedback right away! (e.g. "I hear you! Quick tip: instead of 'didn't went', say 'didn't go' because after 'didn't' we use the base verb.").
+3. If they used basic vocabulary: suggest a B2/C1 upgrade in voice! (e.g. "Also, instead of 'very happy', a great C1 phrase is 'thrilled to bits'!").
+4. Then continue the conversation with an engaging comment and a follow-up question so the dialog keeps flowing.
+5. Keep the total response around 2-3 sentences so speech stays snappy, fast, and natural.
+
+Current scenario: ${scenario}.
+Personality: ${persona?.personality || 'friendly and supportive'}.
+Strictness: ${strictness}.
+Custom instructions: ${persona?.customPrompt || 'Teach vocabulary in context and give real-life examples.'}
+${targetWord ? `Target word to teach: "${targetWord}".` : ''}
+
 Respond in valid JSON format ONLY with this schema:
 {
-  "reply": "Your natural conversational response in English (2-3 sentences), teaching vocabulary, giving a real-life example, and asking a follow-up question.",
+  "reply": "Conversational spoken text including natural voice feedback, correction, vocabulary tip, and follow-up question.",
   "feedback": {
     "hasMistake": boolean,
     "correction": {
@@ -118,7 +127,7 @@ Respond in valid JSON format ONLY with this schema:
     },
     {
       role: 'model',
-      parts: [{ text: '{"reply":"Ready to coach! Send your spoken English sentence.","feedback":{"hasMistake":false,"fluencyScore":100,"estimatedLevel":"B2"}}' }],
+      parts: [{ text: '{"reply":"Hello! I am your live voice tutor just like ChatGPT Voice. Speak naturally in English, and I will give you instant voice feedback on every sentence. What is on your mind today?","feedback":{"hasMistake":false,"fluencyScore":100,"estimatedLevel":"B2"}}' }],
     },
     ...messages.slice(-6).map((m) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
@@ -173,6 +182,7 @@ Respond in valid JSON format ONLY with this schema:
 
 /**
  * Built-in pedagogical speech analyzer and feedback generator
+ * Produces voice-friendly spoken responses like ChatGPT Voice
  */
 function generateSmartTutorWithFeedback(
   messages: ChatMessage[],
@@ -182,26 +192,38 @@ function generateSmartTutorWithFeedback(
 ): { reply: string; feedback: SpeechFeedback } {
   const lastUserText = messages.filter((m) => m.role === 'user').slice(-1)[0]?.content || '';
   const feedback = analyzeSpeechFallback(lastUserText);
-
   const cleanText = lastUserText.toLowerCase().trim();
+  const tutorName = persona?.name || 'Luna';
 
-  // Conversational response tailored with vocabulary & examples
-  let reply = '';
+  // Compose live spoken feedback like ChatGPT Voice
+  let spokenCorrection = '';
+  if (feedback.hasMistake && feedback.correction) {
+    spokenCorrection = `Good attempt! Quick tip on your English: instead of "${feedback.correction.original}", remember to say "${feedback.correction.corrected}". `;
+  }
 
+  let spokenUpgrade = '';
+  if (feedback.vocabularyUpgrade && feedback.vocabularyUpgrade.used !== 'basic expression') {
+    spokenUpgrade = `Also, to sound more advanced, you can say "${feedback.vocabularyUpgrade.betterAlternative}" instead of "${feedback.vocabularyUpgrade.used}". `;
+  }
+
+  let conversationTail = '';
   if (cleanText.includes('example with') || cleanText.includes('how to use') || cleanText.includes('meaning of')) {
     const wordMatch = cleanText.match(/(?:example with|how to use|meaning of)\s+["']?([a-zA-Z]+)["']?/i);
     const word = wordMatch ? wordMatch[1].toLowerCase() : (targetWord || 'achieve');
-    reply = `Excellent curiosity! The word "${word}" is very useful. For example: "Consistent practice allows you to achieve great results." Notice how natural that sounds. Can you try creating a sentence with "${word}"?`;
-  } else if (feedback.hasMistake && feedback.correction) {
-    reply = `Great effort! A quick tip: instead of "${feedback.correction.original}", it's more natural to say "${feedback.correction.corrected}". Keep going — what else would you like to discuss?`;
-  } else if (cleanText.length > 25) {
-    reply = `I really like how you expressed that! To make your speech sound even more advanced, try using "${feedback.vocabularyUpgrade?.betterAlternative || 'enhance'}". How does that sound to you?`;
-  } else if (cleanText.includes('hello') || cleanText.includes('hi')) {
-    reply = `Hello! I'm your speech coach. Today I'm going to give you real-time feedback on your grammar, vocabulary, and pronunciation. Tell me: what did you do today?`;
+    conversationTail = `The word "${word}" is super useful! For example: "Consistent practice allows you to achieve fluency." Can you try making a sentence with "${word}"?`;
+  } else if (cleanText.includes('hello') || cleanText.includes('hi') || cleanText.length < 5) {
+    conversationTail = `Hello! I'm ${tutorName}, your live voice coach. Speak freely, and I'll give you instant voice feedback. What would you like to chat about today?`;
+  } else if (scenario === 'job-interview') {
+    conversationTail = `That makes total sense. Could you tell me about a time you handled a difficult deadline or challenge at work?`;
+  } else if (scenario === 'travel-airport') {
+    conversationTail = `Sounds exciting! Where would you like to travel next, and why?`;
+  } else if (scenario === 'ielts-speaking') {
+    conversationTail = `Good fluency! How do you think modern technology influences that trend?`;
   } else {
-    reply = `Understood! To level up your English, notice the vocabulary feedback below. Let's practice: can you describe your favorite hobby using two adjectives?`;
+    conversationTail = `I really like how you expressed that! Tell me, what else happened today?`;
   }
 
+  const reply = `${spokenCorrection}${spokenUpgrade}${conversationTail}`.trim();
   return { reply, feedback };
 }
 

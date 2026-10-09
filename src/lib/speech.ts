@@ -79,10 +79,25 @@ export function playAudioFallback(text: string, rate: number = 1.0): Promise<voi
   });
 }
 
+export type VoicePersona = 'sky' | 'alloy' | 'nova' | 'echo';
+
+export const CHATGPT_VOICE_PRESETS = [
+  { id: 'sky', name: 'Sky', gender: 'Female', description: 'Теплый, естественный, живой голос' },
+  { id: 'alloy', name: 'Alloy', gender: 'Neutral', description: 'Сбалансированный, чистый, четкий тембр' },
+  { id: 'nova', name: 'Nova', gender: 'Female', description: 'Энергичный, яркий, дружелюбный' },
+  { id: 'echo', name: 'Echo', gender: 'Male', description: 'Глубокий, спокойный, авторитетный' },
+] as const;
+
 /**
  * Speaks a word or sentence using SpeechSynthesis, with automatic fallback to MP3 audio stream
+ * Supports ChatGPT Voice Personas (Sky, Alloy, Nova, Echo)
  */
-export function speakWord(text: string, lang?: string, rate?: number): Promise<void> {
+export function speakWord(
+  text: string,
+  lang?: string,
+  rate?: number,
+  voicePersona?: VoicePersona
+): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') {
       resolve();
@@ -107,11 +122,29 @@ export function speakWord(text: string, lang?: string, rate?: number): Promise<v
     } catch {}
 
     const finalLang = selectedLang || 'en-US';
-    const finalRate = selectedRate !== undefined ? selectedRate : 0.95;
+    const persona = voicePersona || 'sky';
+
+    // Persona-specific pitch & rate for natural human-like cadence
+    let personaPitch = 1.0;
+    let personaRate = selectedRate !== undefined ? selectedRate : 0.98;
+
+    if (persona === 'sky') {
+      personaPitch = 1.04;
+      personaRate = selectedRate !== undefined ? selectedRate : 0.98;
+    } else if (persona === 'alloy') {
+      personaPitch = 1.0;
+      personaRate = selectedRate !== undefined ? selectedRate : 1.0;
+    } else if (persona === 'nova') {
+      personaPitch = 1.1;
+      personaRate = selectedRate !== undefined ? selectedRate : 1.02;
+    } else if (persona === 'echo') {
+      personaPitch = 0.88;
+      personaRate = selectedRate !== undefined ? selectedRate : 0.94;
+    }
 
     // Direct audio fallback if SpeechSynthesis API is unsupported
     if (!('speechSynthesis' in window)) {
-      playAudioFallback(text, finalRate).then(resolve);
+      playAudioFallback(text, personaRate).then(resolve);
       return;
     }
 
@@ -138,29 +171,74 @@ export function speakWord(text: string, lang?: string, rate?: number): Promise<v
       const utterance = new SpeechSynthesisUtterance(text);
       activeUtterance = utterance; // Prevent GC sweep bug
       utterance.lang = finalLang;
-      utterance.rate = finalRate;
-      utterance.pitch = 1.0;
+      utterance.rate = personaRate;
+      utterance.pitch = personaPitch;
 
-      // Select natural sounding English voice matching the requested lang/accent
+      // Select natural sounding English voice matching the requested persona and lang
       const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
-      const englishVoice =
-        voices.find(
-          (v) =>
-            v.lang.toLowerCase() === finalLang.toLowerCase() &&
-            (v.name.includes('Natural') ||
-              v.name.includes('Samantha') ||
-              v.name.includes('Google') ||
-              v.name.includes('Daniel') ||
-              v.name.includes('Oliver') ||
-              v.name.includes('Karen') ||
-              v.name.includes('Alex') ||
-              v.name.includes('Victoria'))
-        ) ||
-        voices.find((v) => v.lang.toLowerCase() === finalLang.toLowerCase()) ||
-        voices.find((v) => v.lang.startsWith('en'));
+      
+      let matchedVoice: SpeechSynthesisVoice | undefined;
 
-      if (englishVoice) {
-        utterance.voice = englishVoice;
+      if (persona === 'sky') {
+        matchedVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith('en') &&
+            (v.name.includes('Samantha') ||
+              v.name.includes('Google US English') ||
+              v.name.includes('Jenny') ||
+              v.name.includes('Zoe') ||
+              v.name.includes('Karen') ||
+              v.name.includes('Natural'))
+        );
+      } else if (persona === 'alloy') {
+        matchedVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith('en') &&
+            (v.name.includes('Daniel') ||
+              v.name.includes('Oliver') ||
+              v.name.includes('Guy') ||
+              v.name.includes('Google UK English Male'))
+        );
+      } else if (persona === 'nova') {
+        matchedVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith('en') &&
+            (v.name.includes('Victoria') ||
+              v.name.includes('Ava') ||
+              v.name.includes('Google UK English Female') ||
+              v.name.includes('Serena'))
+        );
+      } else if (persona === 'echo') {
+        matchedVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith('en') &&
+            (v.name.includes('Alex') ||
+              v.name.includes('Fred') ||
+              v.name.includes('George') ||
+              v.name.includes('Male'))
+        );
+      }
+
+      // Fallback voice selection if persona-specific voice wasn't found
+      if (!matchedVoice) {
+        matchedVoice =
+          voices.find(
+            (v) =>
+              v.lang.toLowerCase() === finalLang.toLowerCase() &&
+              (v.name.includes('Natural') ||
+                v.name.includes('Samantha') ||
+                v.name.includes('Google') ||
+                v.name.includes('Daniel') ||
+                v.name.includes('Oliver') ||
+                v.name.includes('Alex') ||
+                v.name.includes('Victoria'))
+          ) ||
+          voices.find((v) => v.lang.toLowerCase() === finalLang.toLowerCase()) ||
+          voices.find((v) => v.lang.startsWith('en'));
+      }
+
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
       }
 
       let hasResolved = false;
