@@ -19,6 +19,18 @@ class SoundEngine {
     return this.enabled;
   }
 
+  playHaptic(type: 'light' | 'medium' | 'success' | 'error' = 'light') {
+    if (typeof window === 'undefined' || !('navigator' in window)) return;
+    try {
+      if ('vibrate' in navigator) {
+        if (type === 'light') navigator.vibrate(12);
+        else if (type === 'medium') navigator.vibrate(25);
+        else if (type === 'success') navigator.vibrate([15, 40, 25]);
+        else if (type === 'error') navigator.vibrate([35, 50, 35]);
+      }
+    } catch {}
+  }
+
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     try {
@@ -40,6 +52,7 @@ class SoundEngine {
   }
 
   playTap() {
+    this.playHaptic('light');
     if (!this.enabled) return;
     const ctx = this.getContext();
     if (!ctx) return;
@@ -66,6 +79,7 @@ class SoundEngine {
   }
 
   playCorrect() {
+    this.playHaptic('success');
     if (!this.enabled) return;
     const ctx = this.getContext();
     if (!ctx) return;
@@ -98,6 +112,7 @@ class SoundEngine {
   }
 
   playWrong() {
+    this.playHaptic('error');
     if (!this.enabled) return;
     const ctx = this.getContext();
     if (!ctx) return;

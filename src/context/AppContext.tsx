@@ -46,6 +46,7 @@ interface AppContextType {
   toggleFavorite: (wordId: string) => void;
   resetWordProgress: (wordId: string) => void;
   addCustomWord: (wordData: Omit<Word, 'id'>) => Word;
+  bulkAddCustomWords: (wordsData: Array<Omit<Word, 'id'>>) => Word[];
   updateSettings: (newSettings: Partial<UserSettings>) => void;
   updateProfileName: (name: string) => void;
   completeOnboarding: (answers: {
@@ -520,6 +521,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return newWord;
   };
 
+  const bulkAddCustomWords = (wordsData: Array<Omit<Word, 'id'>>): Word[] => {
+    if (!wordsData.length) return [];
+    const timestamp = Date.now();
+    const newWords: Word[] = wordsData.map((data, idx) => ({
+      ...data,
+      id: `custom-${timestamp}-${idx}`,
+      is_custom: true,
+    }));
+
+    setWords((prev) => [...newWords, ...prev]);
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CUSTOM_WORDS);
+      const list = saved ? JSON.parse(saved) : [];
+      localStorage.setItem(STORAGE_KEYS.CUSTOM_WORDS, JSON.stringify([...newWords, ...list]));
+    } catch {}
+
+    const nowIso = new Date().toISOString();
+    setUserWords((prev) => {
+      const updated = { ...prev };
+      newWords.forEach((nw) => {
+        updated[nw.id] = {
+          id: `uw-${nw.id}`,
+          userId: profile.id,
+          wordId: nw.id,
+          status: 'LEARNING',
+          difficulty: 2.5,
+          intervalMinutes: 10,
+          correctCount: 0,
+          incorrectCount: 0,
+          reviewCount: 0,
+          lastReviewedAt: null,
+          nextReviewAt: nowIso,
+          memoryStrength: 10,
+          isFavorite: false,
+        };
+      });
+      return updated;
+    });
+
+    sound.playFanfare();
+    return newWords;
+  };
+
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setProfile((prev) => ({
       ...prev,
@@ -577,6 +622,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleFavorite,
         resetWordProgress,
         addCustomWord,
+        bulkAddCustomWords,
         updateSettings,
         updateProfileName,
         completeOnboarding,

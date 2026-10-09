@@ -1,12 +1,17 @@
 import { EnglishLevel } from './vocabulary';
 
 export type StudyDirection = 'both' | 'en_ru' | 'ru_en';
+export type SpeechAccent = 'en-US' | 'en-GB';
+export type SpeechSpeed = 0.8 | 1.0 | 1.2;
 
 export interface UserSettings {
   dailyGoalWords: number; // 5, 10, 15, 20, 30
   studyTimeMinutes: number; // 5, 10, 15, 20, 30
   targetLang: 'ru' | 'kz' | 'en';
   studyDirection: StudyDirection; // 'both' | 'en_ru' | 'ru_en'
+  speechAccent?: SpeechAccent; // 'en-US' | 'en-GB'
+  speechSpeed?: SpeechSpeed; // 0.8 | 1.0 | 1.2
+  hapticsEnabled?: boolean;
   soundEnabled: boolean;
   animationsEnabled: boolean;
   darkMode: boolean;

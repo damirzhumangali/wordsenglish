@@ -18,6 +18,18 @@ export const metadata: Metadata = {
   description:
     'Modern spaced repetition, gamified vocabulary training and active recall designed to convert passive recognition into confident spoken English.',
   keywords: ['vocabulary', 'english', 'spaced repetition', 'ielts', 'toefl', 'quizlet', 'duolingo'],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'VocabFlow',
+  },
+};
+
+export const viewport = {
+  themeColor: '#10b981',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

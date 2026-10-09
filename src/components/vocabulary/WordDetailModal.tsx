@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Volume2, Star, RotateCcw, Play, CheckCircle2, ArrowLeftRight } from 'lucide-react';
+import { X, Volume2, Star, RotateCcw, Play, CheckCircle2, ArrowLeftRight, Brain } from 'lucide-react';
 import { Word } from '@/types/vocabulary';
 import { useApp } from '@/context/AppContext';
 import { formatNextReviewTime } from '@/lib/srs';
 import { speakWord } from '@/lib/speech';
 import { sound } from '@/lib/sound';
+import { getWordMnemonic } from '@/lib/mnemonics';
 
 interface WordDetailModalProps {
   word: Word | null;
@@ -25,6 +26,7 @@ export function WordDetailModal({ word, onClose }: WordDetailModalProps) {
     profile.settings.targetLang === 'kz' && word.translation_kz
       ? word.translation_kz
       : word.translation_ru;
+  const mnemonic = getWordMnemonic(word);
 
   const handleListen = () => {
     sound.playTap();
@@ -135,6 +137,23 @@ export function WordDetailModal({ word, onClose }: WordDetailModalProps) {
               &ldquo;{word.example}&rdquo;
             </p>
           </div>
+
+          {mnemonic && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/15 to-orange-500/10 border border-amber-300/50 dark:border-amber-600/30">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                  <Brain className="w-4 h-4 text-amber-500" />
+                  <span>Мнемоника / Ассоциация</span>
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">
+                  EN ⇄ RU
+                </span>
+              </div>
+              <p className="text-sm text-amber-950 dark:text-amber-100 font-semibold italic leading-relaxed">
+                {mnemonic}
+              </p>
+            </div>
+          )}
 
           {word.synonyms && word.synonyms.length > 0 && (
             <div>

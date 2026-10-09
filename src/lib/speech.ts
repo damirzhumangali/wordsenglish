@@ -82,16 +82,36 @@ export function playAudioFallback(text: string, rate: number = 1.0): Promise<voi
 /**
  * Speaks a word or sentence using SpeechSynthesis, with automatic fallback to MP3 audio stream
  */
-export function speakWord(text: string, lang = 'en-US', rate = 0.9): Promise<void> {
+export function speakWord(text: string, lang?: string, rate?: number): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') {
       resolve();
       return;
     }
 
+    let selectedLang = lang;
+    let selectedRate = rate;
+
+    // Automatically inherit accent & speed from saved user settings
+    try {
+      const saved = localStorage.getItem('vocabflow_profile_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!selectedLang && parsed?.settings?.speechAccent) {
+          selectedLang = parsed.settings.speechAccent;
+        }
+        if (selectedRate === undefined && parsed?.settings?.speechSpeed) {
+          selectedRate = parsed.settings.speechSpeed;
+        }
+      }
+    } catch {}
+
+    const finalLang = selectedLang || 'en-US';
+    const finalRate = selectedRate !== undefined ? selectedRate : 0.95;
+
     // Direct audio fallback if SpeechSynthesis API is unsupported
     if (!('speechSynthesis' in window)) {
-      playAudioFallback(text, rate).then(resolve);
+      playAudioFallback(text, finalRate).then(resolve);
       return;
     }
 
@@ -117,24 +137,27 @@ export function speakWord(text: string, lang = 'en-US', rate = 0.9): Promise<voi
 
       const utterance = new SpeechSynthesisUtterance(text);
       activeUtterance = utterance; // Prevent GC sweep bug
-      utterance.lang = lang;
-      utterance.rate = rate;
+      utterance.lang = finalLang;
+      utterance.rate = finalRate;
       utterance.pitch = 1.0;
 
-      // Select natural sounding English voice if available
+      // Select natural sounding English voice matching the requested lang/accent
       const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
       const englishVoice =
         voices.find(
           (v) =>
-            v.lang.startsWith('en') &&
+            v.lang.toLowerCase() === finalLang.toLowerCase() &&
             (v.name.includes('Natural') ||
               v.name.includes('Samantha') ||
               v.name.includes('Google') ||
               v.name.includes('Daniel') ||
+              v.name.includes('Oliver') ||
               v.name.includes('Karen') ||
               v.name.includes('Alex') ||
               v.name.includes('Victoria'))
-        ) || voices.find((v) => v.lang.startsWith('en'));
+        ) ||
+        voices.find((v) => v.lang.toLowerCase() === finalLang.toLowerCase()) ||
+        voices.find((v) => v.lang.startsWith('en'));
 
       if (englishVoice) {
         utterance.voice = englishVoice;

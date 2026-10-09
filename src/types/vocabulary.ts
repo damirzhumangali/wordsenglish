@@ -51,6 +51,7 @@ export interface Word {
   synonyms: string[];
   antonyms?: string[];
   audio_url?: string;
+  mnemonic?: string; // Mnemonic memory hook / ассоциация для запоминания
   is_custom?: boolean;
 }
 

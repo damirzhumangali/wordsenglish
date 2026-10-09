@@ -10,12 +10,15 @@ import {
   CheckCircle2,
   Layers,
   Sparkles,
+  Upload,
+  Download,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { Word, SRSStatus } from '@/types/vocabulary';
 import { CATEGORIES } from '@/lib/seed-words';
 import { WordDetailModal } from '@/components/vocabulary/WordDetailModal';
 import { AddWordModal } from '@/components/vocabulary/AddWordModal';
+import { BulkImportModal } from '@/components/vocabulary/BulkImportModal';
 import { formatNextReviewTime } from '@/lib/srs';
 import { speakWord } from '@/lib/speech';
 import { sound } from '@/lib/sound';
@@ -31,6 +34,21 @@ export default function VocabularyPage() {
   // Modals state
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+
+  const handleExportDeck = () => {
+    sound.playTap();
+    const content = filteredWords
+      .map((w) => `${w.word} - ${w.translation_ru} [${w.level}, ${w.part_of_speech}]`)
+      .join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vocabflow-deck-${activeTab}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Filtered words
   const filteredWords = useMemo(() => {
@@ -101,16 +119,39 @@ export default function VocabularyPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            sound.playTap();
-            setIsAddWordOpen(true);
-          }}
-          className="py-3 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md shadow-emerald-500/20 flex items-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Custom Word</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              sound.playTap();
+              setIsBulkImportOpen(true);
+            }}
+            className="py-2.5 px-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+            title="Импортировать список слов из Quizlet, Excel или текста"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Импорт колоды</span>
+          </button>
+
+          <button
+            onClick={handleExportDeck}
+            className="py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+            title="Скачать список слов в текстовый файл"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Экспорт ({filteredWords.length})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playTap();
+              setIsAddWordOpen(true);
+            }}
+            className="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-pointer transition-all active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Добавить слово</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -285,6 +326,11 @@ export default function VocabularyPage() {
       <AddWordModal
         isOpen={isAddWordOpen}
         onClose={() => setIsAddWordOpen(false)}
+      />
+
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
       />
     </div>
   );
