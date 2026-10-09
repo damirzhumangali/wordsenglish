@@ -163,6 +163,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [userWords, isClient]);
 
+  // Continuous auto-sync for account "qwerty"
+  useEffect(() => {
+    if (!isClient) return;
+    if (profile.id === 'user-qwerty' || profile.name === 'qwerty' || profile.email === 'qwerty@vocabflow.app') {
+      try {
+        const custom = words.filter((w) => w.is_custom);
+        const vault = {
+          profile: {
+            ...profile,
+            id: 'user-qwerty',
+            name: 'qwerty',
+            email: 'qwerty@vocabflow.app',
+            isDemoUser: false,
+          },
+          userWords,
+          customWords: custom,
+          achievements,
+          activity,
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('vocabflow_account_qwerty', JSON.stringify(vault));
+      } catch {}
+    }
+  }, [profile, userWords, words, achievements, activity, isClient]);
+
   // Calculate words due for review (safe on client)
   const dueForReviewWords = useMemo(() => {
     const nowTime = isClient ? Date.now() : 1791379200000;
@@ -582,11 +607,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const loginUser = (email: string, name: string) => {
+  const loginUser = (emailOrLogin: string, name?: string) => {
+    const cleanLogin = emailOrLogin.trim().toLowerCase();
+    const isQwerty =
+      cleanLogin === 'qwerty' ||
+      cleanLogin === 'qwerty@vocabflow.app' ||
+      cleanLogin === 'qwerty@vocabflow.com';
+
+    if (isQwerty) {
+      // Check if saved vault exists for qwerty
+      try {
+        const rawVault = localStorage.getItem('vocabflow_account_qwerty');
+        if (rawVault) {
+          const parsed = JSON.parse(rawVault);
+          if (parsed.profile) setProfile(parsed.profile);
+          if (parsed.userWords) setUserWords(parsed.userWords);
+          if (parsed.customWords) setWords([...SEED_WORDS, ...parsed.customWords]);
+          if (parsed.achievements) setAchievements(parsed.achievements);
+          if (parsed.activity) setActivity(parsed.activity);
+          setAuthModalOpen(false);
+          sound.playFanfare();
+          return;
+        }
+      } catch {}
+
+      // If no prior vault exists yet, promote current profile to qwerty
+      const qwertyProfile: UserProfile = {
+        ...profile,
+        id: 'user-qwerty',
+        name: 'qwerty',
+        email: 'qwerty@vocabflow.app',
+        isDemoUser: false,
+      };
+      setProfile(qwertyProfile);
+      setAuthModalOpen(false);
+      sound.playFanfare();
+      return;
+    }
+
     setProfile((prev) => ({
       ...prev,
-      email,
-      name: name || email.split('@')[0],
+      email: emailOrLogin,
+      name: name || emailOrLogin.split('@')[0],
       isDemoUser: false,
     }));
     setAuthModalOpen(false);
@@ -594,7 +656,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logoutUser = () => {
+    // Save current qwerty data before logout
+    if (profile.id === 'user-qwerty' || profile.name === 'qwerty') {
+      try {
+        const custom = words.filter((w) => w.is_custom);
+        const vault = {
+          profile,
+          userWords,
+          customWords: custom,
+          achievements,
+          activity,
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('vocabflow_account_qwerty', JSON.stringify(vault));
+      } catch {}
+    }
     setProfile(getDefaultProfile());
+    sound.playTap();
   };
 
   return (

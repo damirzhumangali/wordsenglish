@@ -20,7 +20,7 @@ import { getRankDetails } from '@/lib/storage';
 import { sound } from '@/lib/sound';
 
 export function ProfilePage() {
-  const { profile, achievements, updateProfileName, setSettingsModalOpen } = useApp();
+  const { profile, achievements, updateProfileName, setSettingsModalOpen, setAuthModalOpen } = useApp();
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.name);
 
@@ -89,6 +89,26 @@ export function ProfilePage() {
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {profile.email} • Joined {profile.joinedDate}
             </p>
+
+            {/* Account Status Badge */}
+            {profile.id === 'user-qwerty' || profile.name === 'qwerty' ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold mt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Аккаунт qwerty подключен (все данные автоматически сохраняются)</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playTap();
+                  setAuthModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold mt-1 shadow-sm cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>Войти в аккаунт qwerty</span>
+              </button>
+            )}
 
             {/* Level XP Progress */}
             <div className="pt-2 max-w-md">

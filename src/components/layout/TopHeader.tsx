@@ -2,12 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sparkles, Flame, Award, Moon, Sun, Settings } from 'lucide-react';
+import { Sparkles, Flame, Award, Moon, Sun, Settings, User } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { sound } from '@/lib/sound';
 
 export function TopHeader() {
-  const { profile, updateSettings, setSettingsModalOpen } = useApp();
+  const { profile, updateSettings, setSettingsModalOpen, setAuthModalOpen } = useApp();
 
   const toggleDarkMode = () => {
     sound.playTap();
@@ -35,6 +35,22 @@ export function TopHeader() {
           <Award className="w-3.5 h-3.5" />
           <span>{profile.totalXp}</span>
         </div>
+
+        <button
+          onClick={() => {
+            sound.playTap();
+            setAuthModalOpen(true);
+          }}
+          className={`p-1.5 rounded-xl transition-colors ${
+            !profile.isDemoUser
+              ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+          aria-label="Account"
+          title={!profile.isDemoUser ? `Аккаунт: ${profile.name}` : 'Войти в аккаунт'}
+        >
+          <User className="w-4 h-4" />
+        </button>
 
         <button
           onClick={toggleDarkMode}

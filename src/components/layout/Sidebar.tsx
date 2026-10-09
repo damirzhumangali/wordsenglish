@@ -169,27 +169,40 @@ export function Sidebar() {
           <span>Settings</span>
         </button>
 
-        {profile.isDemoUser ? (
+        {!profile.isDemoUser ? (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-200 truncate">
+                  {profile.name}
+                </span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
+                Сохранено
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                sound.playTap();
+                logoutUser();
+              }}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Выйти из аккаунта</span>
+            </button>
+          </div>
+        ) : (
           <button
             onClick={() => {
               sound.playTap();
               setAuthModalOpen(true);
             }}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors cursor-pointer"
           >
             <LogIn className="w-3.5 h-3.5" />
-            <span>Sign In / Sync Progress</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              sound.playTap();
-              logoutUser();
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Log Out</span>
+            <span>Войти (аккаунт qwerty)</span>
           </button>
         )}
       </div>
