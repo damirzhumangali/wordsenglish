@@ -21,12 +21,15 @@ import {
   MessageSquare,
   BookOpen,
   ArrowRight,
+  Sliders,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { sound } from '@/lib/sound';
 import { speakWord, createSpeechRecognizer, isSpeechRecognitionSupported } from '@/lib/speech';
-import { AIMessage, AIScenarioId, AIScenario } from '@/types/ai';
+import { AIMessage, AIScenarioId, AIScenario, CustomAIPersona, SpeechFeedback } from '@/types/ai';
 import { GeminiLiveMode } from '@/components/ai/GeminiLiveMode';
+import { SpeechFeedbackCard } from '@/components/ai/SpeechFeedbackCard';
+import { CustomPersonaModal } from '@/components/ai/CustomPersonaModal';
 
 const SCENARIOS: AIScenario[] = [
   {
@@ -114,16 +117,30 @@ export default function AITutorPage() {
   const [customApiKey, setCustomApiKey] = useState('');
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [isLiveModeOpen, setIsLiveModeOpen] = useState(false);
+  const [showPersonaModal, setShowPersonaModal] = useState(false);
+
+  const [currentPersona, setCurrentPersona] = useState<CustomAIPersona>({
+    id: 'persona-default',
+    name: 'Luna',
+    roleTitle: 'Personal Speech Coach',
+    personality: 'friendly',
+    strictness: 'balanced',
+    feedbackFocus: ['grammar', 'vocabulary', 'pronunciation'],
+    speechAccent: 'en-US',
+  });
 
   const activeScenario = SCENARIOS.find((s) => s.id === activeScenarioId) || SCENARIOS[0];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognizerRef = useRef<any>(null);
 
-  // Load custom Gemini API key from localStorage
+  // Load custom Gemini API key and persona from localStorage
   useEffect(() => {
     try {
       const savedKey = localStorage.getItem('vocabflow_gemini_api_key');
       if (savedKey) setCustomApiKey(savedKey);
+
+      const savedPersona = localStorage.getItem('vocabflow_custom_ai_persona');
+      if (savedPersona) setCurrentPersona(JSON.parse(savedPersona));
     } catch {}
   }, []);
 
@@ -171,11 +188,13 @@ export default function AITutorPage() {
           messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
           scenario: activeScenarioId,
           customApiKey: customApiKey.trim() || undefined,
+          customPersona: currentPersona,
         }),
       });
 
       const data = await res.json();
       const reply = data.reply || "That's a great thought! Let's continue practicing.";
+      const feedback = data.feedback as SpeechFeedback | undefined;
 
       const assistantMessage: AIMessage = {
         id: `assistant-${Date.now()}`,
@@ -184,12 +203,20 @@ export default function AITutorPage() {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Attach feedback to user message
+      setMessages((prev) => {
+        const copy = [...prev];
+        const lastUser = copy.find((m) => m.id === userMessage.id);
+        if (lastUser && feedback) {
+          lastUser.feedback = feedback;
+        }
+        return [...copy, assistantMessage];
+      });
 
       // Auto-speak response if enabled
       if (autoSpeak) {
         setTimeout(() => {
-          speakWord(reply);
+          speakWord(reply, currentPersona?.speechAccent || 'en-US');
         }, 200);
       }
     } catch {
@@ -207,7 +234,7 @@ export default function AITutorPage() {
 
   const handleSpeakText = (text: string) => {
     sound.playTap();
-    speakWord(text);
+    speakWord(text, currentPersona?.speechAccent || 'en-US');
   };
 
   const startVoiceInput = () => {
@@ -303,8 +330,21 @@ export default function AITutorPage() {
           </div>
         </div>
 
-        {/* Action Controls: Gemini Live button, Auto-voice toggle, Gemini Key, Reset */}
+        {/* Action Controls: Custom AI persona, Gemini Live, Auto-voice, Key, Reset */}
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              sound.playTap();
+              setShowPersonaModal(true);
+            }}
+            className="py-1.5 px-3 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-indigo-100 transition-colors shadow-xs"
+            title="Настроить характер и строгость своего ИИ"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Свой ИИ: {currentPersona.name}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -405,37 +445,44 @@ export default function AITutorPage() {
               </div>
 
               {/* Message Bubble */}
-              <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 space-y-2 ${
-                  isUser
-                    ? 'bg-emerald-500 text-white rounded-tr-xs'
-                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-tl-xs border border-slate-200/60 dark:border-slate-700/60'
-                }`}
-              >
-                <div className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                  {msg.content}
-                </div>
-
-                {/* Footer of message: audio replay button + timestamp */}
+              <div className="max-w-[85%] sm:max-w-[75%] space-y-2">
                 <div
-                  className={`flex items-center justify-between text-[11px] pt-1 border-t ${
+                  className={`rounded-2xl p-4 space-y-2 ${
                     isUser
-                      ? 'border-emerald-400/40 text-emerald-100'
-                      : 'border-slate-200/60 dark:border-slate-700/60 text-slate-400'
+                      ? 'bg-emerald-500 text-white rounded-tr-xs'
+                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-tl-xs border border-slate-200/60 dark:border-slate-700/60'
                   }`}
                 >
-                  {!isUser && (
-                    <button
-                      type="button"
-                      onClick={() => handleSpeakText(msg.content)}
-                      className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold cursor-pointer"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Послушать</span>
-                    </button>
-                  )}
-                  <span className="ml-auto">{msg.timestamp}</span>
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    {msg.content}
+                  </div>
+
+                  {/* Footer of message: audio replay button + timestamp */}
+                  <div
+                    className={`flex items-center justify-between text-[11px] pt-1 border-t ${
+                      isUser
+                        ? 'border-emerald-400/40 text-emerald-100'
+                        : 'border-slate-200/60 dark:border-slate-700/60 text-slate-400'
+                    }`}
+                  >
+                    {!isUser && (
+                      <button
+                        type="button"
+                        onClick={() => handleSpeakText(msg.content)}
+                        className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold cursor-pointer"
+                      >
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span>Послушать</span>
+                      </button>
+                    )}
+                    <span className="ml-auto">{msg.timestamp}</span>
+                  </div>
                 </div>
+
+                {/* Real Speech Feedback Card for user's message */}
+                {isUser && msg.feedback && (
+                  <SpeechFeedbackCard feedback={msg.feedback} />
+                )}
               </div>
             </motion.div>
           );
@@ -601,6 +648,19 @@ export default function AITutorPage() {
         onScenarioChange={(id) => setActiveScenarioId(id)}
         scenarios={SCENARIOS}
         customApiKey={customApiKey}
+        customPersona={currentPersona}
+      />
+      {/* Custom Persona Configuration Modal */}
+      <CustomPersonaModal
+        isOpen={showPersonaModal}
+        onClose={() => setShowPersonaModal(false)}
+        currentPersona={currentPersona}
+        onSave={(updated) => {
+          setCurrentPersona(updated);
+          try {
+            localStorage.setItem('vocabflow_custom_ai_persona', JSON.stringify(updated));
+          } catch {}
+        }}
       />
     </div>
   );

@@ -14,10 +14,14 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
+  CheckCircle2,
+  AlertTriangle,
+  Award,
 } from 'lucide-react';
 import { sound } from '@/lib/sound';
 import { speakWord, stopSpeaking, createSpeechRecognizer, isSpeechRecognitionSupported } from '@/lib/speech';
-import { AIScenario, AIScenarioId } from '@/types/ai';
+import { AIScenario, AIScenarioId, CustomAIPersona, SpeechFeedback } from '@/types/ai';
+import { SpeechFeedbackCard } from '@/components/ai/SpeechFeedbackCard';
 
 interface GeminiLiveModeProps {
   isOpen: boolean;
@@ -26,6 +30,7 @@ interface GeminiLiveModeProps {
   onScenarioChange: (id: AIScenarioId) => void;
   scenarios: AIScenario[];
   customApiKey?: string;
+  customPersona?: CustomAIPersona;
 }
 
 type LiveStatus = 'connecting' | 'listening' | 'thinking' | 'speaking' | 'paused';
@@ -44,11 +49,13 @@ export function GeminiLiveMode({
   onScenarioChange,
   scenarios,
   customApiKey,
+  customPersona,
 }: GeminiLiveModeProps) {
   const [status, setStatus] = useState<LiveStatus>('listening');
   const [liveTranscript, setLiveTranscript] = useState('');
   const [conversation, setConversation] = useState<LiveMessage[]>([]);
   const [isMuted, setIsMuted] = useState(false);
+  const [latestFeedback, setLatestFeedback] = useState<SpeechFeedback | null>(null);
   const [taughtWords, setTaughtWords] = useState<
     { word: string; translation: string; pronunciation: string; example: string }[]
   >([]);
@@ -58,6 +65,9 @@ export function GeminiLiveMode({
   const currentTranscriptRef = useRef('');
   const conversationRef = useRef<LiveMessage[]>([]);
   const isComponentActiveRef = useRef(false);
+
+  const tutorName = customPersona?.name || 'Luna';
+  const tutorAccent = customPersona?.speechAccent || 'en-US';
 
   useEffect(() => {
     conversationRef.current = conversation;
@@ -74,12 +84,13 @@ export function GeminiLiveMode({
 
     isComponentActiveRef.current = true;
     sound.playTap();
+    setLatestFeedback(null);
 
-    // Initial greeting from Gemini Live
+    // Initial greeting from Gemini Live tailored to persona and scenario
     const greetingText =
       activeScenario.id === 'vocabulary-drill'
-        ? "Hello! I am connected via Gemini Live. I'm ready to teach you words and hear you speak. What word would you like to practice?"
-        : `Hello! Gemini Live is ready. Let's practice ${activeScenario.name}. Speak naturally, I'm listening!`;
+        ? `Hello! I am ${tutorName}, your personal voice coach. I am ready to hear you speak and give you instant feedback on grammar, C1 vocabulary, and pronunciation. What would you like to practice today?`
+        : `Hello! I am ${tutorName}. Let's practice ${activeScenario.name}. Speak naturally, and I'll give you feedback after each sentence!`;
 
     setConversation([
       {
@@ -98,7 +109,7 @@ export function GeminiLiveMode({
       stopSpeaking();
       stopListening();
     };
-  }, [isOpen, activeScenario.id]);
+  }, [isOpen, activeScenario.id, tutorName]);
 
   const stopListening = () => {
     if (recognizerRef.current) {
@@ -202,11 +213,16 @@ export function GeminiLiveMode({
           })),
           scenario: activeScenario.id,
           customApiKey: customApiKey?.trim() || undefined,
+          customPersona: customPersona,
         }),
       });
 
       const data = await res.json();
       const reply = data.reply || "I heard you! That's a great sentence. Let's keep going!";
+
+      if (data.feedback) {
+        setLatestFeedback(data.feedback);
+      }
 
       const geminiMsg: LiveMessage = {
         id: `gemini-${Date.now()}`,
@@ -233,7 +249,7 @@ export function GeminiLiveMode({
     setStatus('speaking');
 
     try {
-      await speakWord(text);
+      await speakWord(text, tutorAccent);
     } catch {
       // Ignore
     }
@@ -294,7 +310,7 @@ export function GeminiLiveMode({
         <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
 
         {/* Header Bar */}
-        <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between relative z-10">
+        <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between relative z-10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25">
               <Sparkles className="w-5 h-5" />
@@ -302,15 +318,18 @@ export function GeminiLiveMode({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-black text-white">
-                  Gemini Live Voice
+                  {tutorName}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full bg-indigo-950 border border-indigo-700 text-indigo-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>LIVE</span>
+                  <span>VOICE LIVE</span>
+                </span>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">
+                  {tutorAccent === 'en-GB' ? '🇬🇧 UK Accent' : '🇺🇸 US Accent'}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Непрерывный разговор голосом без нажатия кнопок
+                {customPersona?.roleTitle || 'Персональный ИИ-репетитор'} • Непрерывный разговор голосом
               </p>
             </div>
           </div>
@@ -330,7 +349,7 @@ export function GeminiLiveMode({
         </div>
 
         {/* Scenario Switcher Pills */}
-        <div className="px-4 py-2 border-b border-slate-800/60 flex items-center gap-1.5 overflow-x-auto scrollbar-none relative z-10">
+        <div className="px-4 py-2 border-b border-slate-800/60 flex items-center gap-1.5 overflow-x-auto scrollbar-none relative z-10 shrink-0">
           {scenarios.map((sc) => {
             const isSel = sc.id === activeScenario.id;
             return (
@@ -353,10 +372,10 @@ export function GeminiLiveMode({
           })}
         </div>
 
-        {/* Central Live Interactive Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10 overflow-hidden">
+        {/* Central Live Interactive Area - Scrollable */}
+        <div className="flex-1 flex flex-col items-center p-4 sm:p-6 text-center relative z-10 overflow-y-auto space-y-4">
           {/* Animated Gemini Dynamic Orb */}
-          <div className="relative mb-6">
+          <div className="relative my-2 shrink-0">
             {/* Outer pulsating rings */}
             <AnimatePresence>
               {status === 'listening' && (
@@ -386,7 +405,7 @@ export function GeminiLiveMode({
 
             {/* Core Orb */}
             <div
-              className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 relative select-none ${
+              className={`w-32 h-32 sm:w-36 sm:h-36 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 relative select-none ${
                 status === 'speaking'
                   ? 'bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 shadow-indigo-500/40 scale-105'
                   : status === 'thinking'
@@ -420,22 +439,22 @@ export function GeminiLiveMode({
           </div>
 
           {/* Status Label */}
-          <div className="space-y-1 mb-4">
+          <div className="space-y-1">
             <div className="text-sm font-bold tracking-wide uppercase text-slate-300">
-              {status === 'listening' && '🟢 Слушаю вас... Говорите по-английски'}
-              {status === 'thinking' && '🟣 Gemini Live думает и подбирает ответ...'}
-              {status === 'speaking' && '🔵 Luna говорит... Слушайте произношение'}
+              {status === 'listening' && `🟢 Слушаю вас... Говорите (${tutorName} на связи)`}
+              {status === 'thinking' && `🟣 ${tutorName} анализирует грамматику и готовит фидбэк...`}
+              {status === 'speaking' && `🔵 ${tutorName} говорит... Слушайте произношение`}
               {status === 'paused' && '⏸️ Разговор на паузе'}
             </div>
             <p className="text-xs text-slate-400">
               {status === 'listening'
-                ? 'Сделайте паузу, когда закончите мысль — ИИ ответит сам'
+                ? 'Сделайте паузу, когда закончите мысль — ИИ ответит и проверит ошибки'
                 : 'Вы можете начать говорить в любой момент, чтобы перебить ИИ'}
             </p>
           </div>
 
           {/* Live Subtitle / Transcript Banner */}
-          <div className="w-full max-w-lg min-h-[50px] p-3 rounded-2xl bg-slate-800/70 border border-slate-700/60 text-xs sm:text-sm font-medium text-slate-200 italic flex items-center justify-center">
+          <div className="w-full max-w-xl min-h-[46px] p-3 rounded-2xl bg-slate-800/70 border border-slate-700/60 text-xs sm:text-sm font-medium text-slate-200 italic flex items-center justify-center">
             {liveTranscript ? (
               <span>&ldquo;{liveTranscript}&rdquo;</span>
             ) : conversation.length > 0 ? (
@@ -447,9 +466,16 @@ export function GeminiLiveMode({
             )}
           </div>
 
+          {/* Real-Time Speech Feedback Card */}
+          {latestFeedback && (
+            <div className="w-full max-w-xl text-left animate-fadeIn">
+              <SpeechFeedbackCard feedback={latestFeedback} />
+            </div>
+          )}
+
           {/* Live Taught Vocabulary Board */}
           {taughtWords.length > 0 && (
-            <div className="mt-4 w-full max-w-lg">
+            <div className="w-full max-w-xl pt-2">
               <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-1.5 flex items-center justify-center gap-1">
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Изученные слова в этом разговоре:</span>
@@ -471,7 +497,7 @@ export function GeminiLiveMode({
         </div>
 
         {/* Bottom Bar: Mute / Interrupt / Restart */}
-        <div className="p-4 sm:p-5 border-t border-slate-800 flex items-center justify-center gap-4 relative z-10">
+        <div className="p-4 sm:p-5 border-t border-slate-800 flex items-center justify-center gap-4 relative z-10 shrink-0">
           <button
             onClick={toggleMute}
             className={`py-3 px-5 rounded-2xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shadow-md ${
