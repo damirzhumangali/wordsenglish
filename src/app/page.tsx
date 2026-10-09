@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Flame, Award, BookOpen, Target, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -94,6 +95,33 @@ export default function DashboardPage() {
 
       {/* Hero Daily Training Goal Card */}
       <DailyGoalCard />
+
+      {/* AI Voice Tutor Feature Banner */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-950 to-purple-950 text-white relative overflow-hidden shadow-xl border border-indigo-700/40">
+        <div className="absolute -right-10 -bottom-10 w-60 h-60 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative z-10">
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider border border-indigo-400/30">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Новинка • Gemini AI Voice Tutor</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Разговаривай голосом и учи слова с ИИ Luna
+            </h2>
+            <p className="text-sm text-indigo-200/90 leading-relaxed font-medium">
+              Общайся на английском в реальном времени, получай разборы сложных слов, живые примеры использования и мягкие исправления речи.
+            </p>
+          </div>
+
+          <Link
+            href="/ai-tutor"
+            className="py-3.5 px-6 rounded-2xl bg-white text-indigo-950 hover:bg-indigo-50 font-black text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all self-start sm:self-auto shrink-0 active:scale-[0.98]"
+          >
+            <span>Начать диалог голосом</span>
+            <ArrowRight className="w-4 h-4 text-indigo-600" />
+          </Link>
+        </div>
+      </div>
 
       {/* Word of the Day & Quick Actions Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

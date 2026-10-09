@@ -19,6 +19,7 @@ import {
   Award,
   LogOut,
   LogIn,
+  Bot,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { sound } from '@/lib/sound';
@@ -44,6 +45,7 @@ export function Sidebar() {
       badge: dueForReviewWords.length > 0 ? dueForReviewWords.length : undefined,
     },
     { href: '/vocabulary', label: 'Vocabulary', icon: Library },
+    { href: '/ai-tutor', label: 'AI Voice Tutor', icon: Bot, badge: 'AI' },
     { href: '/games', label: 'Games', icon: Gamepad2 },
     { href: '/stats', label: 'Statistics', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: User },

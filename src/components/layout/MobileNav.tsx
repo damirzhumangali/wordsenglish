@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, RotateCcw, Gamepad2, User } from 'lucide-react';
+import { Home, BookOpen, RotateCcw, Gamepad2, User, Bot } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { sound } from '@/lib/sound';
 
@@ -20,6 +20,7 @@ export function MobileNav() {
       icon: RotateCcw,
       badge: dueForReviewWords.length > 0 ? dueForReviewWords.length : undefined,
     },
+    { href: '/ai-tutor', label: 'AI Voice', icon: Bot },
     { href: '/games', label: 'Games', icon: Gamepad2 },
     { href: '/profile', label: 'Profile', icon: User },
   ];
