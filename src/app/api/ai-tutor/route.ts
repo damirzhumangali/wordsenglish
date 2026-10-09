@@ -76,7 +76,13 @@ ${targetWord ? `Focus target vocabulary word for this session: "${targetWord}".`
     })),
   ];
 
-  const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+  const modelsToTry = [
+    'gemini-2.0-flash-exp',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-pro',
+  ];
 
   for (const model of modelsToTry) {
     try {

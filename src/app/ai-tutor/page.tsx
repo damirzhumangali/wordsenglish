@@ -26,6 +26,7 @@ import { useApp } from '@/context/AppContext';
 import { sound } from '@/lib/sound';
 import { speakWord, createSpeechRecognizer, isSpeechRecognitionSupported } from '@/lib/speech';
 import { AIMessage, AIScenarioId, AIScenario } from '@/types/ai';
+import { GeminiLiveMode } from '@/components/ai/GeminiLiveMode';
 
 const SCENARIOS: AIScenario[] = [
   {
@@ -112,6 +113,7 @@ export default function AITutorPage() {
   const [speechTranscript, setSpeechTranscript] = useState('');
   const [customApiKey, setCustomApiKey] = useState('');
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [isLiveModeOpen, setIsLiveModeOpen] = useState(false);
 
   const activeScenario = SCENARIOS.find((s) => s.id === activeScenarioId) || SCENARIOS[0];
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -301,8 +303,21 @@ export default function AITutorPage() {
           </div>
         </div>
 
-        {/* Action Controls: Auto-voice toggle, Gemini Key, Reset */}
+        {/* Action Controls: Gemini Live button, Auto-voice toggle, Gemini Key, Reset */}
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              sound.playTap();
+              setIsLiveModeOpen(true);
+            }}
+            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/25 active:scale-[0.98] transition-all"
+            title="Открыть режим непрерывного голосового диалога Gemini Live"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Gemini Live Voice</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -578,6 +593,15 @@ export default function AITutorPage() {
           </motion.div>
         </div>
       )}
+      {/* Gemini Live Hands-Free Fullscreen Mode */}
+      <GeminiLiveMode
+        isOpen={isLiveModeOpen}
+        onClose={() => setIsLiveModeOpen(false)}
+        activeScenario={activeScenario}
+        onScenarioChange={(id) => setActiveScenarioId(id)}
+        scenarios={SCENARIOS}
+        customApiKey={customApiKey}
+      />
     </div>
   );
 }

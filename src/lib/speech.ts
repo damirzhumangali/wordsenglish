@@ -218,6 +218,24 @@ export function speakWord(text: string, lang?: string, rate?: number): Promise<v
   });
 }
 
+/**
+ * Immediately cancels all active speech synthesis and audio fallbacks
+ */
+export function stopSpeaking() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
+  if (activeAudioFallback) {
+    try {
+      activeAudioFallback.pause();
+      activeAudioFallback.src = '';
+    } catch {}
+    activeAudioFallback = null;
+  }
+  activeUtterance = null;
+}
+
 export interface SpeechRecognitionResult {
   transcript: string;
   isFinal: boolean;
@@ -332,7 +350,8 @@ export function createAudioLevelMonitor(
 export function createSpeechRecognizer(
   onResult: (res: SpeechRecognitionResult) => void,
   onError?: (errCode: SpeechErrorCode, rawError?: unknown) => void,
-  onEnd?: () => void
+  onEnd?: () => void,
+  continuous: boolean = false
 ) {
   if (typeof window === 'undefined') return null;
 
@@ -347,7 +366,7 @@ export function createSpeechRecognizer(
   try {
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    recognition.continuous = false;
+    recognition.continuous = continuous;
     recognition.interimResults = true;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
